@@ -2,7 +2,9 @@ import tarfile
 import shutil
 import os
 
-def extract_package(tarball_path, dest="/tmp/gtpm-extract"):
+def extract_package(tarball_path, dest=None):
+    if dest is None:
+        os.path.expanduser("~/.gtpm/tmp/gtpm-extract")
     if os.path.exists(dest):
         shutil.rmtree(dest)
     with tarfile.open(tarball_path, "r:gz") as tar:
