@@ -9,7 +9,7 @@ def extract_package(tarball_path, dest=None):
     if os.path.exists(dest):
         shutil.rmtree(dest)
     with tarfile.open(tarball_path, "r:gz") as tar:
-        tar.extractall(dest)
+        tar.extractall(dest, filter="data")
     return dest
 
 def read_manifest(extracted_path):
