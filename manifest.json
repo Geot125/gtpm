@@ -1,0 +1,12 @@
+{
+  "name": "mytool",
+  "version": "1.0.0",
+  "description": "A short one-line summary of what this does",
+  "maintainer": "Geot125",
+  "arch": "all",
+  "dependencies": [],
+  "files": [
+    "bin/mytool",
+    "share/mytool/data.txt"
+  ]
+}
