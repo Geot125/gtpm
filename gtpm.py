@@ -9,7 +9,8 @@ def extract_package(tarball_path, dest=None):
         shutil.rmtree(dest)
     with tarfile.open(tarball_path, "r:gz") as tar:
         tar.extractall(dest)
+    return dest
 
 if __name__ == "__main__":
-    extract_package("mytool-1.0.0.tar.gz")
-    print("Extraction done, check /tmp/gtpm-extract")
+    extracted_path = extract_package("mytool-1.0.0.tar.gz")
+    print(f"Extraction done, check {extracted_path}")
