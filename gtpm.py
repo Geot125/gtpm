@@ -2,6 +2,7 @@ import tarfile
 import shutil
 import os
 import json
+import sys
 
 def extract_package(tarball_path, dest=None):
     if dest is None:
@@ -20,6 +21,8 @@ def read_manifest(extracted_path):
 
 def install_package(extracted_path, manifest):
     prefix = os.environ.get("PREFIX")
+    if prefix is None:
+        raise SystemExit("Error: PREFIX environment variable is not set. This tool must be run inside Termux.")
     for relative_path in manifest["files"]:
         source = os.path.join(extracted_path, relative_path)
         destination = os.path.join(prefix, relative_path)
@@ -28,7 +31,8 @@ def install_package(extracted_path, manifest):
         shutil.copy2(source, destination)
 
 if __name__ == "__main__":
-    extracted_path = extract_package("mytool-1.0.0.tar.gz")
+    tarball_path = sys.argv[1]
+    extracted_path = extract_package(tarball_path)
     print(f"Extraction done, check {extracted_path}")
     manifest = read_manifest(extracted_path)
     print(manifest)
