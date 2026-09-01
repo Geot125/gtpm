@@ -30,10 +30,22 @@ def install_package(extracted_path, manifest):
         os.makedirs(dest_dir, exist_ok=True)
         shutil.copy2(source, destination)
 
+def validate_manifest(manifest):
+    required_keys = ["name", "version", "files"]
+    for key in required_keys:
+        if key not in manifest:
+            raise SystemExit(f"Error: manifest is missing required key '{key}'")
+    if not isinstance(manifest["files"], list):
+        raise SystemExit("Error: manifest 'files' must be a list")
+    for item in manifest["files"]:
+        if not isinstance(item, str):
+            raise SystemExit(f"Error: manifest 'files' entry {item!r} is not a string")
+
 if __name__ == "__main__":
     tarball_path = sys.argv[1]
     extracted_path = extract_package(tarball_path)
     print(f"Extraction done, check {extracted_path}")
     manifest = read_manifest(extracted_path)
+    validate_manifest(manifest)
     print(manifest)
     install_package(extracted_path, manifest)
