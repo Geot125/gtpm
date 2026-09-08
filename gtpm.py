@@ -31,6 +31,12 @@ def install_package(extracted_path, manifest):
         dest_dir = os.path.dirname(destination)
         os.makedirs(dest_dir, exist_ok=True)
         shutil.copy2(source, destination)
+    status = load_status()
+    status[manifest["name"]] = {
+        "version": manifest["version"],
+        "files": manifest["files"]
+    }
+    save_status(status)
 
 def validate_manifest(manifest):
     required_keys = ["name", "version", "files"]
@@ -42,6 +48,27 @@ def validate_manifest(manifest):
     for item in manifest["files"]:
         if not isinstance(item, str):
             raise SystemExit(f"Error: manifest 'files' entry {item!r} is not a string")
+
+def load_status():
+    prefix = os.environ.get("PREFIX")
+    if prefix is None:
+        raise SystemExit("Error: PREFIX environment variable is not set. This tool must be run inside Termux.")
+    status_path = os.path.join(prefix, "var", "lib", "gtpm", "status.json")
+    if os.path.exists(status_path):
+        with open(status_path, "r") as f:
+            return json.load(f)
+    else: 
+        return {}
+
+def save_status(data):
+    prefix = os.environ.get("PREFIX")
+    if prefix is None:
+        raise SystemExit("Error: PREFIX environment variable is not set. This tool must be run inside Termux.")
+    status_path = os.path.join(prefix, "var", "lib", "gtpm", "status.json")
+    status_dir = os.path.dirname(status_path)
+    os.makedirs(status_dir, exist_ok=True)
+    with open(status_path, "w") as f:
+        json.dump(data, f, indent=2)
 
 if __name__ == "__main__":
     tarball_path = sys.argv[1]
