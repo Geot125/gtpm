@@ -24,6 +24,8 @@ def install_package(extracted_path, manifest):
     if prefix is None:
         raise SystemExit("Error: PREFIX environment variable is not set. This tool must be run inside Termux.")
     for relative_path in manifest["files"]:
+        if os.path.isabs(relative_path) or ".." in relative_path.split(os.sep):
+            raise SystemExit(f"Error: unsafe path in manifest: {relative_path!r}")
         source = os.path.join(extracted_path, relative_path)
         destination = os.path.join(prefix, relative_path)
         dest_dir = os.path.dirname(destination)
