@@ -4,6 +4,7 @@ import shutil
 import os
 import json
 import sys
+import urllib.request
 
 def extract_package(tarball_path, dest=None):
     if dest is None:
@@ -85,10 +86,28 @@ def remove_package(name):
     del status[name]
     save_status(status)
 
+INDEX_URL = "https://raw.githubusercontent.com/Geot125/gtpm/packages/index.json"
+
+def fetch_index():
+    with urllib.request.urlopen(INDEX_URL) as response:
+        data = json.load(response)
+    return data
+
 if __name__ == "__main__":
     command = sys.argv[1]
     if command == "install":
-        tarball_path = sys.argv[2]
+        target = sys.argv[2]
+        if os.path.exists(target):
+            tarball_path = target
+        else:
+            index = fetch_index()
+            if target not in index:
+                raise SystemExit(f"Error: package '{target}' not found in index")
+            url = index[target]["url"]
+            download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
+            os.makedirs(os.path.dirname(download_path), exist_ok=True)
+            urllib.request.urlretrieve(url, download_path)
+            tarball_path = download_path
         extracted_path = extract_package(tarball_path)
         print(f"Extraction done, check {extracted_path}")
         manifest = read_manifest(extracted_path)
