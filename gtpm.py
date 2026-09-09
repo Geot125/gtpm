@@ -93,9 +93,23 @@ def fetch_index():
         data = json.load(response)
     return data
 
+def print_usage():
+        print("Usage: gtpm <command> [args]")
+        print("Commands:")
+        print("  install <package-or-tarball>   Install a package")
+        print("  remove <package>                Remove an installed package")
+        print("  list                            List installed packages")
+        print("  help                            Show this help message")
+
 if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        print_usage()
+        sys.exit(1)
     command = sys.argv[1]
-    if command == "install":
+    if command in ("help", "--help", "-h"):
+        print_usage()
+        sys.exit(0)
+    elif command == "install":
         target = sys.argv[2]
         if os.path.exists(target):
             tarball_path = target
@@ -123,4 +137,6 @@ if __name__ == "__main__":
         remove_package(name)
         print(f"Removed {name}")
     else:
-        raise SystemExit(f"Error: unknown command '{command}'")
+        print(f"Error: unknown command '{command}'")
+        print_usage()
+        sys.exit(1)
