@@ -70,11 +70,37 @@ def save_status(data):
     with open(status_path, "w") as f:
         json.dump(data, f, indent=2)
 
+def remove_package(name):
+    prefix = os.environ.get("PREFIX")
+    if prefix is None:
+        raise SystemExit("Error: PREFIX environment variable is not set. This tool must be run inside Termux.")
+    status = load_status()
+    if name not in status:
+        raise SystemExit(f"Error: package '{name}' is not installed")
+    for relative_path in status[name]["files"]:
+        file_path = os.path.join(prefix, relative_path)
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    del status[name]
+    save_status(status)
+
 if __name__ == "__main__":
-    tarball_path = sys.argv[1]
-    extracted_path = extract_package(tarball_path)
-    print(f"Extraction done, check {extracted_path}")
-    manifest = read_manifest(extracted_path)
-    validate_manifest(manifest)
-    print(manifest)
-    install_package(extracted_path, manifest)
+    command = sys.argv[1]
+    if command == "install":
+        tarball_path = sys.argv[2]
+        extracted_path = extract_package(tarball_path)
+        print(f"Extraction done, check {extracted_path}")
+        manifest = read_manifest(extracted_path)
+        validate_manifest(manifest)
+        print(manifest)
+        install_package(extracted_path, manifest)
+    elif command == "list":
+        status = load_status()
+        for name, info in status.items():
+            print(name, info["version"])
+    elif command == "remove":
+        name = sys.argv[2]
+        remove_package(name)
+        print(f"Removed {name}")
+    else:
+        raise SystemExit(f"Error: unknown command '{command}'")
