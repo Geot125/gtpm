@@ -5,10 +5,11 @@ import os
 import json
 import sys
 import urllib.request
+import tempfile
 
 def extract_package(tarball_path, dest=None):
     if dest is None:
-        dest = os.path.expanduser("~/.gtpm/tmp/gtpm-extract")
+        dest = tempfile.mkdtemp(prefix="gtpm-")
     if os.path.exists(dest):
         shutil.rmtree(dest)
     with tarfile.open(tarball_path, "r:gz") as tar:
@@ -126,11 +127,14 @@ if __name__ == "__main__":
             urllib.request.urlretrieve(url, download_path)
             tarball_path = download_path
         extracted_path = extract_package(tarball_path)
-        print(f"Extraction done, check {extracted_path}")
-        manifest = read_manifest(extracted_path)
-        validate_manifest(manifest)
-        print(manifest)
-        install_package(extracted_path, manifest)
+        try:
+            print(f"Extraction done, check {extracted_path}")
+            manifest = read_manifest(extracted_path)
+            validate_manifest(manifest)
+            print(manifest)
+            install_package(extracted_path, manifest)
+        finally:
+            shutil.rmtree(extracted_path, ignore_errors=True)
     elif command == "list":
         status = load_status()
         for name, info in status.items():
