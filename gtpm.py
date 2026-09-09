@@ -104,12 +104,15 @@ def print_usage():
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
-        sys.exit(1)
+        raise SystemExit(1)
     command = sys.argv[1]
     if command in ("help", "--help", "-h"):
         print_usage()
-        sys.exit(0)
+        raise SystemExit(0)
     elif command == "install":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: install requires a package name or tarball path")
         target = sys.argv[2]
         if os.path.exists(target):
             tarball_path = target
@@ -133,10 +136,12 @@ if __name__ == "__main__":
         for name, info in status.items():
             print(name, info["version"])
     elif command == "remove":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: remove requires a package name")
         name = sys.argv[2]
         remove_package(name)
         print(f"Removed {name}")
     else:
-        print(f"Error: unknown command '{command}'")
         print_usage()
-        sys.exit(1)
+        raise SystemExit(f"Error: unknown command '{command}'")
