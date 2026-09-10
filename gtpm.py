@@ -97,10 +97,52 @@ def fetch_index():
 def print_usage():
         print("Usage: gtpm <command> [args]")
         print("Commands:")
-        print("  install <package-or-tarball>   Install a package")
+        print("  install <package-or-tarball>    Install a package")
         print("  remove <package>                Remove an installed package")
+        print("  upgrade <package>               Upgrade a package to the latest version")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
+
+def parse_version(version_string):
+    return tuple(int(part) for part in version_string.split("."))
+
+def install_from_target(target):
+    if os.path.exists(target):
+        tarball_path = target
+    else:
+        index = fetch_index()
+        if target not in index:
+            raise SystemExit(f"Error: package '{target}' not found in index")
+        url = index[target]["url"]
+        download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
+        os.makedirs(os.path.dirname(download_path), exist_ok=True)
+        urllib.request.urlretrieve(url, download_path)
+        tarball_path = download_path
+    extracted_path = extract_package(tarball_path)
+    try:
+        print(f"Extraction done, check {extracted_path}")
+        manifest = read_manifest(extracted_path)
+        validate_manifest(manifest)
+        print(manifest)
+        install_package(extracted_path, manifest)
+    finally:
+        shutil.rmtree(extracted_path, ignore_errors=True)
+
+def upgrade_package(name):
+    status = load_status()
+    if name not in status:
+        raise SystemExit(f"Error: package '{name}' is not installed")
+    index = fetch_index()
+    if name not in index:
+        raise SystemExit(f"Error: package '{name}' not found in index")
+    installed_version = status[name]["version"]
+    available_version = index[name]["version"]
+    if parse_version(available_version) <= parse_version(installed_version):
+        print(f"{name} is already up to date (version {installed_version})")
+        return
+    print(f"Upgrading {name}: {installed_version} -> {available_version}")
+    install_from_target(name)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -115,26 +157,7 @@ if __name__ == "__main__":
             print_usage()
             raise SystemExit("Error: install requires a package name or tarball path")
         target = sys.argv[2]
-        if os.path.exists(target):
-            tarball_path = target
-        else:
-            index = fetch_index()
-            if target not in index:
-                raise SystemExit(f"Error: package '{target}' not found in index")
-            url = index[target]["url"]
-            download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
-            os.makedirs(os.path.dirname(download_path), exist_ok=True)
-            urllib.request.urlretrieve(url, download_path)
-            tarball_path = download_path
-        extracted_path = extract_package(tarball_path)
-        try:
-            print(f"Extraction done, check {extracted_path}")
-            manifest = read_manifest(extracted_path)
-            validate_manifest(manifest)
-            print(manifest)
-            install_package(extracted_path, manifest)
-        finally:
-            shutil.rmtree(extracted_path, ignore_errors=True)
+        install_from_target(target)
     elif command == "list":
         status = load_status()
         for name, info in status.items():
@@ -146,6 +169,12 @@ if __name__ == "__main__":
         name = sys.argv[2]
         remove_package(name)
         print(f"Removed {name}")
+    elif command == "upgrade":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: upgrade requires a package name")
+        name = sys.argv[2]
+        upgrade_package(name)
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
