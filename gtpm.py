@@ -38,6 +38,7 @@ def install_package(extracted_path, manifest):
     status = load_status()
     status[manifest["name"]] = {
         "version": manifest["version"],
+        "description": manifest.get("description", ""),
         "files": manifest["files"]
     }
     save_status(status)
