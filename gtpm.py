@@ -6,6 +6,7 @@ import json
 import sys
 import urllib.request
 import tempfile
+import hashlib
 
 def extract_package(tarball_path, dest=None):
     if dest is None:
@@ -114,16 +115,20 @@ def install_from_target(target):
         if target not in index:
             raise SystemExit(f"Error: package '{target}' not found in index")
         url = index[target]["url"]
+        expected_checksum = index[target].get("sha256")
         download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
         os.makedirs(os.path.dirname(download_path), exist_ok=True)
         urllib.request.urlretrieve(url, download_path)
+        if expected_checksum:
+            actual_checksum = compute_checksum(download_path)
+            if actual_checksum != expected_checksum:
+                os.remove(download_path)
+                raise SystemExit(f"Error: checksum mismatch for '{target}' — download may be corrupted or tampered with")
         tarball_path = download_path
     extracted_path = extract_package(tarball_path)
     try:
-        print(f"Extraction done, check {extracted_path}")
         manifest = read_manifest(extracted_path)
         validate_manifest(manifest)
-        print(manifest)
         install_package(extracted_path, manifest)
     finally:
         shutil.rmtree(extracted_path, ignore_errors=True)
@@ -143,6 +148,11 @@ def upgrade_package(name):
     print(f"Upgrading {name}: {installed_version} -> {available_version}")
     install_from_target(name)
 
+def compute_checksum(file_path):
+    sha256 = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        sha256.update(f.read())
+    return sha256.hexdigest()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
