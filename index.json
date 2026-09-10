@@ -2,6 +2,7 @@
   "mytool": {
     "version": "1.0.0",
     "description": "A short one-line summary of what this does",
-    "url": "https://raw.githubusercontent.com/Geot125/gtpm/packages/mytool-1.0.0.tar.gz"
+    "url": "https://raw.githubusercontent.com/Geot125/gtpm/packages/mytool-1.0.0.tar.gz",
+    "sha256": "39ad290390f970a67364ba22f46a1fd65cace49b8ca0ab6596a7f7d5ea160f60"
   }
 }
