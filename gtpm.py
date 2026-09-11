@@ -102,6 +102,7 @@ def print_usage():
         print("  install <package-or-tarball>    Install a package")
         print("  remove <package>                Remove an installed package")
         print("  upgrade <package>               Upgrade a package to the latest version")
+        print("  info <package>                  Show details about a package")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
 
@@ -155,6 +156,26 @@ def compute_checksum(file_path):
         sha256.update(f.read())
     return sha256.hexdigest()
 
+def show_info(name):
+    status = load_status()
+    if name in status:
+        info = status[name]
+        print(f"{name} (installed)")
+        print(f"Version: {info['version']}")
+        print(f"Description: {info['description']}")
+        print("Files:")
+        for f in info["files"]:
+            print(f"  {f}")
+        return
+    index = fetch_index()
+    if name in index:
+        info = index[name]
+        print(f"{name} (not installed)")
+        print(f"Version: {info['version']}")
+        print(f"Description: {info.get('description', '')}")
+        return
+    raise SystemExit(f"Error: package '{name}' is not installed and was not found in the index")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
@@ -163,6 +184,12 @@ if __name__ == "__main__":
     if command in ("help", "--help", "-h"):
         print_usage()
         raise SystemExit(0)
+    elif command == "info":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: info requires a package name")
+        name = sys.argv[2]
+        show_info(name)
     elif command == "install":
         if len(sys.argv) < 3:
             print_usage()
