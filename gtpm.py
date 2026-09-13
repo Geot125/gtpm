@@ -92,9 +92,12 @@ def remove_package(name):
 INDEX_URL = "https://raw.githubusercontent.com/Geot125/gtpm/packages/index.json"
 
 def fetch_index():
-    with urllib.request.urlopen(INDEX_URL) as response:
-        data = json.load(response)
-    return data
+    try:
+        with urllib.request.urlopen(INDEX_URL) as response:
+            data = json.load(response)
+        return data
+    except urllib.error.URLError as e:
+        raise SystemExit(f"Error: could not reach the package index. Check your internet connection. ({e})")
 
 def print_usage():
         print("Usage: gtpm <command> [args]")
@@ -121,7 +124,10 @@ def install_from_target(target):
         expected_checksum = index[target].get("sha256")
         download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
         os.makedirs(os.path.dirname(download_path), exist_ok=True)
-        urllib.request.urlretrieve(url, download_path)
+        try:
+            urllib.request.urlretrieve(url, download_path)
+        except urllib.error.URLError as e:
+            raise SystemExit(f"Error: could not download package '{target}'. Check your internet connection. ({e})")
         if expected_checksum:
             actual_checksum = compute_checksum(download_path)
             if actual_checksum != expected_checksum:
