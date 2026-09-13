@@ -103,6 +103,7 @@ def print_usage():
         print("  remove <package>                Remove an installed package")
         print("  upgrade <package>               Upgrade a package to the latest version")
         print("  info <package>                  Show details about a package")
+        print("  search <term>                   Search available packages")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
 
@@ -176,6 +177,19 @@ def show_info(name):
         return
     raise SystemExit(f"Error: package '{name}' is not installed and was not found in the index")
 
+def search_packages(term):
+    index = fetch_index()
+    matches = []
+    for name, info in index.items():
+        if term.lower() in name.lower() or term.lower() in info["description"].lower():
+            matches.append(name, info)
+    if not matches:
+        print(f"No packages found matching '{term}'")
+        return
+    print(f"Found {len(matches)} matches:")
+    for name, info in matches:
+        print(f"{name} {info['version']} - {info['description']}")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
@@ -213,6 +227,12 @@ if __name__ == "__main__":
             raise SystemExit("Error: upgrade requires a package name")
         name = sys.argv[2]
         upgrade_package(name)
+    elif command == "search":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: search requires a search term")
+        term = sys.argv[2]
+        search_packages(term)
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
