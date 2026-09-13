@@ -107,6 +107,7 @@ def print_usage():
         print("  upgrade <package>               Upgrade a package to the latest version")
         print("  info <package>                  Show details about a package")
         print("  search <term>                   Search available packages")
+        print("  publish <tarball>               Print an index.json entry for a package")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
 
@@ -199,6 +200,21 @@ def search_packages(term):
     for name, info in matches:
         print(f"{name} {info['version']} - {info['description']}")
 
+def publish_package(tarball_path):
+    extracted_path = extract_package(tarball_path)
+    manifest = read_manifest(extracted_path)
+    validate_manifest(manifest)
+    checksum = compute_checksum(tarball_path)
+    filename = os.path.basename(tarball_path)
+    url = f"https://raw.githubusercontent.com/Geot125/gtpm/packages/{filename}"
+    print("Add this to index.json:")
+    print(f'"{manifest["name"]}": {{')
+    print(f'  "version": "{manifest["version"]}",')
+    print(f'  "description": "{manifest["description"]}",')
+    print(f'  "url": "{url}",')
+    print(f'  "sha256": "{checksum}"')
+    print("}")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
@@ -242,6 +258,12 @@ if __name__ == "__main__":
             raise SystemExit("Error: search requires a search term")
         term = sys.argv[2]
         search_packages(term)
+    elif command == "publish":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: publish requires a tarball path")
+        tarball_path = sys.argv[2]
+        publish_package(tarball_path)
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
