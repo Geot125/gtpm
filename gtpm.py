@@ -192,7 +192,10 @@ def search_packages(term):
     if not matches:
         print(f"No packages found matching '{term}'")
         return
-    print(f"Found {len(matches)} matches:")
+    if len(matches) == 1:
+        print("Found 1 match:")
+    else:
+        print(f"Found {len(matches)} matches:")
     for name, info in matches:
         print(f"{name} {info['version']} - {info['description']}")
 
