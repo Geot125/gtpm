@@ -182,7 +182,7 @@ def search_packages(term):
     matches = []
     for name, info in index.items():
         if term.lower() in name.lower() or term.lower() in info["description"].lower():
-            matches.append(name, info)
+            matches.append((name, info))
     if not matches:
         print(f"No packages found matching '{term}'")
         return
