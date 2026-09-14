@@ -143,6 +143,7 @@ def install_from_target(target):
         manifest = read_manifest(extracted_path)
         validate_manifest(manifest)
         install_package(extracted_path, manifest)
+        print(f"Installed {manifest['name']} {manifest['version']}")
     finally:
         shutil.rmtree(extracted_path, ignore_errors=True)
 
