@@ -1,6 +1,6 @@
 # gtpm
 
-A lightweight package manager for Termux — install, remove, and upgrade packages from a local file or a remote repository, with real safety checks along the way.
+A lightweight package manager for Termux — install, remove, upgrade, search, and publish packages from a local file or a remote repository, with real safety checks along the way.
 
 ## Why
 
@@ -9,10 +9,15 @@ Termux doesn't have a simple way to install personal scripts and tools as real, 
 ## Features
 
 - `install` / `remove` / `upgrade` / `list` — the core commands you'd expect
+- `info` — see details about a package, installed or not
+- `search` — find packages by name or description
+- `publish` — generate an `index.json` entry for a new package
+- `update` — update `gtpm` itself to the latest version
 - Installs from a local `.tar.gz` **or** a package name from a remote index
 - SHA-256 checksum verification on remote downloads
 - Path traversal protection — rejects unsafe paths in a package's file list
 - Manifest validation — clear errors instead of crashes on bad packages
+- Clear errors on network failures instead of raw crashes
 - Every install runs in an isolated temp directory, cleaned up automatically
 - Zero dependencies — just Python's standard library
 
@@ -29,10 +34,14 @@ That's it — `gtpm` is now a real command on your system.
 ## Usage
 
 ```bash
-gtpm install mytool              # install from the remote index
+gtpm install mytool                 # install from the remote index
 gtpm install ./mytool-1.0.0.tar.gz  # install from a local file
 gtpm remove mytool
 gtpm upgrade mytool
+gtpm info mytool                    # details, whether installed or not
+gtpm search tool                    # search by name or description
+gtpm publish mytool-1.0.0.tar.gz    # print an index.json entry for a package
+gtpm update                         # update gtpm itself
 gtpm list
 gtpm help
 ```
@@ -70,7 +79,7 @@ Files are installed relative to Termux's `$PREFIX`.
 
 ## Status
 
-Personal project, actively growing. No dependency resolution yet.
+Personal project, actively growing. Dependency resolution is the one big piece not built yet — the `dependencies` field exists in the manifest format but isn't used during install.
 
 ## License
 
