@@ -93,9 +93,12 @@ def remove_package(name):
 INDEX_URL = "https://raw.githubusercontent.com/Geot125/gtpm/packages/index.json"
 
 def fetch_index():
-    with urllib.request.urlopen(INDEX_URL) as response:
-        data = json.load(response)
-    return data
+    try:
+        with urllib.request.urlopen(INDEX_URL) as response:
+            data = json.load(response)
+        return data
+    except urllib.error.URLError as e:
+        raise SystemExit(f"Error: could not reach the package index. Check your internet connection. ({e})")
 
 def print_usage():
         print("Usage: gtpm <command> [args]")
@@ -106,6 +109,7 @@ def print_usage():
         print("  update                          Update gtpm to the latest version")
         print("  info <package>                  Show details about a package")
         print("  search <term>                   Search available packages")
+        print("  publish <tarball>               Print an index.json entry for a package")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
 
@@ -123,7 +127,10 @@ def install_from_target(target):
         expected_checksum = index[target].get("sha256")
         download_path = os.path.expanduser("~/.gtpm/tmp/downloaded.tar.gz")
         os.makedirs(os.path.dirname(download_path), exist_ok=True)
-        urllib.request.urlretrieve(url, download_path)
+        try:
+            urllib.request.urlretrieve(url, download_path)
+        except urllib.error.URLError as e:
+            raise SystemExit(f"Error: could not download package '{target}'. Check your internet connection. ({e})")
         if expected_checksum:
             actual_checksum = compute_checksum(download_path)
             if actual_checksum != expected_checksum:
@@ -184,17 +191,35 @@ def search_packages(term):
     matches = []
     for name, info in index.items():
         if term.lower() in name.lower() or term.lower() in info["description"].lower():
-            matches.append(name, info)
+            matches.append((name, info))
     if not matches:
         print(f"No packages found matching '{term}'")
         return
-    print(f"Found {len(matches)} matches:")
+    if len(matches) == 1:
+        print("Found 1 match:")
+    else:
+        print(f"Found {len(matches)} matches:")
     for name, info in matches:
         print(f"{name} {info['version']} - {info['description']}")
 
 def self_update():
     repo_dir = os.path.dirname(os.path.realpath(__file__))
     subprocess.run(["git", "-C", repo_dir, "pull"], check=True)
+
+def publish_package(tarball_path):
+    extracted_path = extract_package(tarball_path)
+    manifest = read_manifest(extracted_path)
+    validate_manifest(manifest)
+    checksum = compute_checksum(tarball_path)
+    filename = os.path.basename(tarball_path)
+    url = f"https://raw.githubusercontent.com/Geot125/gtpm/packages/{filename}"
+    print("Add this to index.json:")
+    print(f'"{manifest["name"]}": {{')
+    print(f'  "version": "{manifest["version"]}",')
+    print(f'  "description": "{manifest["description"]}",')
+    print(f'  "url": "{url}",')
+    print(f'  "sha256": "{checksum}"')
+    print("}")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
@@ -241,6 +266,12 @@ if __name__ == "__main__":
         search_packages(term)
     elif command == "update":
         self_update()
+    elif command == "publish":
+        if len(sys.argv) < 3:
+            print_usage()
+            raise SystemExit("Error: publish requires a tarball path")
+        tarball_path = sys.argv[2]
+        publish_package(tarball_path)
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
