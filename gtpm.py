@@ -110,6 +110,7 @@ def print_usage():
         print("  info <package>                  Show details about a package")
         print("  search <term>                   Search available packages")
         print("  publish <tarball>               Print an index.json entry for a package")
+        print("  publish --build <folder>        Build a tarball from a source folder, then publish it")
         print("  list                            List installed packages")
         print("  help                            Show this help message")
 
@@ -221,6 +222,10 @@ def publish_package(tarball_path):
     print(f'  "sha256": "{checksum}"')
     print("}")
 
+def build_tarball(source_folder, output_path):
+    with tarfile.open(output_path, "w:gz") as tar:
+        tar.add(source_folder, arcname=".")
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
@@ -270,8 +275,20 @@ if __name__ == "__main__":
         if len(sys.argv) < 3:
             print_usage()
             raise SystemExit("Error: publish requires a tarball path")
-        tarball_path = sys.argv[2]
-        publish_package(tarball_path)
+        if sys.argv[2] == "--build":
+            if len(sys.argv) < 4:
+                print_usage()
+                raise SystemExit("Error: --build requires a source folder path")
+            source_folder = sys.argv[3]
+            manifest_path = os.path.join(source_folder, "manifest.json")
+            with open(manifest_path, "r") as f:
+                manifest = json.load(f)
+            output_filename = f"{manifest['name']}-{manifest['version']}.tar.gz"
+            build_tarball(source_folder, output_filename)
+            publish_package(output_filename)
+        else:
+            tarball_path = sys.argv[2]
+            publish_package(tarball_path)
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
