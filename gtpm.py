@@ -7,6 +7,7 @@ import sys
 import urllib.request
 import tempfile
 import hashlib
+import subprocess
 
 def extract_package(tarball_path, dest=None):
     if dest is None:
@@ -102,6 +103,7 @@ def print_usage():
         print("  install <package-or-tarball>    Install a package")
         print("  remove <package>                Remove an installed package")
         print("  upgrade <package>               Upgrade a package to the latest version")
+        print("  update                          Update gtpm to the latest version")
         print("  info <package>                  Show details about a package")
         print("  search <term>                   Search available packages")
         print("  list                            List installed packages")
@@ -190,6 +192,10 @@ def search_packages(term):
     for name, info in matches:
         print(f"{name} {info['version']} - {info['description']}")
 
+def self_update():
+    repo_dir = os.path.dirname(os.path.realpath(__file__))
+    subprocess.run(["git", "-C", repo_dir, "pull"], check=True)
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print_usage()
@@ -233,6 +239,8 @@ if __name__ == "__main__":
             raise SystemExit("Error: search requires a search term")
         term = sys.argv[2]
         search_packages(term)
+    elif command == "update":
+        self_update()
     else:
         print_usage()
         raise SystemExit(f"Error: unknown command '{command}'")
