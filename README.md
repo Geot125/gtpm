@@ -41,6 +41,7 @@ gtpm upgrade mytool
 gtpm info mytool                    # details, whether installed or not
 gtpm search tool                    # search by name or description
 gtpm publish mytool-1.0.0.tar.gz    # print an index.json entry for a package
+gtpm publish --build packages-src/mytool/  # build the tarball from source first, then publish
 gtpm update                         # update gtpm itself
 gtpm list
 gtpm help
@@ -76,6 +77,10 @@ mytool-1.0.0.tar.gz
 Files are installed relative to Termux's `$PREFIX`.
 
 > **Note:** the folder layout above (`bin/`, `share/`, etc.) is just an example. A package can use whatever folders and file paths make sense for it — the only requirement is that `manifest.json` keeps its required structure (`name`, `version`, `files`, etc.) and that every path listed in `files` actually exists in the package.
+
+### Maintaining package sources
+
+Package source folders (the raw, unpacked files for a package you maintain) live under `packages-src/<name>/` on the `packages` branch, alongside the built tarballs and `index.json`. The `main` branch only contains the `gtpm` tool itself. Running `gtpm publish --build packages-src/mytool/` from within a `packages` branch checkout builds the tarball straight from source and prints the `index.json` entry — no need to build the `.tar.gz` by hand.
 
 ## Status
 
